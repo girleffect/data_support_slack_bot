@@ -29,25 +29,24 @@ app.message(async ({ message, say }) => {
 app.command('/hello', async ({ command, ack, say }) => {
     await ack();
 
-    await say(`Hello, <@${command.user_id}>`);
+    await say(`Hello, <@${command.user_id}>, how can I assist you today? Here are some commands you can use:\n` +
+        `- For help with dashboards, type \`/dashboards\`\n` +
+        `- For help with data sources, type \`/data_sources\`\n` +
+        `- For something else, type \`/adhoc\``);
 });
 
-// Slash command for '/dashboard'
-app.command('/dashboard', async ({ command, ack, say }) => {
-    await ack(); // Acknowledge the command
+// Slash command for '/dashboards'
+app.command('/dashboards', async ({ command, ack, say }) => {
+    await ack(); // Acknowledge the command immediately
 
     try {
         console.log("Fetching dashboard data...");
 
-        const response = await axios.get('https://api.jsonbin.io/v3/b/6752450ce41b4d34e460a52f', {
-            headers: {
-                'Authorization': `Bearer ${process.env.X_MASTER_KEY}`,  // Ensure the correct token is set
-                'X-Master-Key': process.env.X_MASTER_KEY,  // Add the Master Key to the header
-            },
-        });
+        // Update the URL to point to the raw GitHub JSON file
+        const response = await axios.get('https://raw.githubusercontent.com/girleffect/data_dada/main/dashboard.json');
 
         // Log the API response structure for debugging
-        console.log('API Response:', response.data);
+        console.log('API Response:', JSON.stringify(response.data, null, 2)); // Improved logging
 
         // Check if 'dashboards' exists in the response and handle if not
         if (!response.data || !response.data.dashboards) {
@@ -55,10 +54,10 @@ app.command('/dashboard', async ({ command, ack, say }) => {
         }
 
         const dashboards = response.data.dashboards;
-        const formattedTitles = dashboards.map((d, i) => `${i + 1}. ${d.title}`).join('\n');
+        const formattedTitles = dashboards.map((d, i) => `${i + 1}. <${d.url}|${d.title}> ${d.description}`).join('\n');
 
         // Send the formatted message to Slack
-        await say(`Here are the dashboards:\n${formattedTitles}`);
+        await say(`Here is the list of available dashboards:\n${formattedTitles}`);
     } catch (error) {
         // Log the error in detail
         console.error('Error fetching dashboards:', error);
@@ -73,6 +72,41 @@ app.command('/dashboard', async ({ command, ack, say }) => {
     }
 });
 
+
+// Slash command for '/data_sources'
+app.command('/data_sources', async ({ command, ack, say }) => {
+    await ack(); // Acknowledge the command immediately
+
+    try {
+        console.log("Fetching data sources data...");
+
+        // Update the URL to point to the raw GitHub JSON file
+        const response = await axios.get('https://raw.githubusercontent.com/girleffect/data_dada/main/data_sources.json');
+
+        // Log the API response structure for debugging
+        console.log('API Response:', JSON.stringify(response.data, null, 2)); // Improved logging
+
+        // Check if 'dashboards' exists in the response and handle if not
+        if (!response.data || !response.data.data_sources) {
+            throw new Error('Data Sources not found in response');
+        }
+
+
+        // Send the formatted message to Slack
+        await say(`Here is the list of current data sources:\n${formattedTitles}`);
+    } catch (error) {
+        // Log the error in detail
+        console.error('Error fetching data sources:', error);
+
+        // If error.response is available, log it
+        if (error.response) {
+            console.error('API Response Error:', error.response.data);
+        }
+
+        // Notify Slack user of the failure
+        await say('Sorry, I could not fetch the data sources. Please try again later.');
+    }
+});
 
 // Start your app
 (async () => {
