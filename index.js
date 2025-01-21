@@ -81,15 +81,7 @@ app.action('find_dashboard', async ({ ack, body, client }) => {
 
     await client.chat.postMessage({
         channel: channelId, // Use the actual channelId variable here
-        text: dashboardsMessage, // Use the dashboardsMessage variable here
         blocks: [
-            {
-                type: "section",
-                text: {
-                    type: "mrkdwn",
-                    text: dashboardsMessage
-                }
-            },
             {
                 type: "actions",
                 elements: [
@@ -97,10 +89,10 @@ app.action('find_dashboard', async ({ ack, body, client }) => {
                         type: "button",
                         text: {
                             type: "plain_text",
-                            text: "Found what I was looking for it!"
+                            text: "Found what I was looking for!"
                         },
-                        value: "found_dashboard",
-                        action_id: "find_dashboard"
+                        value: "got_it",
+                        action_id: "got_it"
                     },
                     {
                         type: "button",
@@ -125,20 +117,55 @@ app.action('need_help_dashboard', async ({ ack, body, client }) => {
 
     await client.chat.postMessage({
         channel: channelId,
-        text: "It seems you didn't find what you were looking for. Please check our FAQs here: https://www.notion.so/gedigitalteam/FAQs-13e0818435d580acb5eccdb0a5e26062"
+        text: "It seems you didn't find what you were looking for. Please check our FAQs here:",
+        blocks: [
+            {
+                type: "section",
+                text: {
+                    type: "mrkdwn",
+                    text: `It seems you didn't find what you were looking for. Please check our FAQs here:`
+                }
+            },
+            {
+                type: "actions",
+                elements: [
+                    {
+                        type: "button",
+                        text: {
+                            type: "plain_text",
+                            text: "Go to FAQs"
+                        },
+                        url: "https://www.notion.so/gedigitalteam/FAQs-13e0818435d580acb5eccdb0a5e26062",
+                        action_id: "go_to_faqs"
+                    },
+                    {
+                        type: "button",
+                        text: {
+                            type: "plain_text",
+                            text: "What I need is.."
+                        },
+                        action_id: "help_button"
+                    },
+                ]
+            }
+        ]
     });
 });
 
-// Action handler for "Yes, I found it!" (Optional confirmation message)
-app.action('found_dashboard', async ({ ack, body, client }) => {
+// Action handler for "Found what I was looking for!" (Optional confirmation message)
+app.action('got_it', async ({ ack, body, client }) => {
     await ack();
 
+    console.log('Action received:', body); // Log the incoming body
     const channelId = body.channel.id;
+    const userId = body.user.id;
+    const messageText = `That's awesome, <@${userId}>! :tada: I'm glad I could help. Let me know if you need anything else. :blush:.`;
 
-    await client.chat.postMessage({
-        channel: channelId,
-        text: "Great to hear! Let me know if you need anything else."
-    });
+await client.chat.postMessage({
+    channel: channelId,
+    text: messageText
+});
+
 });
 
 
@@ -210,7 +237,7 @@ app.command('/help', async ({ command, ack, client, say }) => {
 
     try {
         // Inform the user to fill out the form
-        await say(`Hi < @${command.user_id} > !Please fill out the form below to submit your request.`);
+        await say(`Hi <@${command.user_id}>! Please fill out the form below to submit your request.`);
 
         // Open the modal
         await client.views.open({
@@ -237,14 +264,56 @@ app.command('/help', async ({ command, ack, client, say }) => {
                     },
                     {
                         type: 'input',
-                        block_id: 'role_input',
+                        block_id: 'department_input',
                         element: {
                             type: 'plain_text_input',
-                            action_id: 'role'
+                            action_id: 'department_name'
                         },
                         label: {
                             type: 'plain_text',
-                            text: 'Role'
+                            text: 'Department Name'
+                        }
+                    },
+                    {
+                        type: 'input',
+                        block_id: 'team_input',
+                        element: {
+                            type: 'static_select', // Changed to static_select for single choice
+                            action_id: 'team_type',
+                            options: [
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Marketing'
+                                    },
+                                    value: 'marketing'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Programmes'
+                                    },
+                                    value: 'programmes'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'E & I'
+                                    },
+                                    value: 'e_and_i'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'MarComms'
+                                    },
+                                    value: 'mar_comms'
+                                }
+                            ]
+                        },
+                        label: {
+                            type: 'plain_text',
+                            text: 'Which department do you belong to?'
                         }
                     },
                     {
@@ -285,7 +354,6 @@ app.command('/help', async ({ command, ack, client, say }) => {
                     {
                         type: 'input',
                         block_id: 'geo_specific_input',
-                        optional: false,
                         element: {
                             type: 'static_select', // Changed to static_select for single choice
                             action_id: 'geo_specific',
@@ -452,24 +520,6 @@ app.command('/help', async ({ command, ack, client, say }) => {
                             text: 'Is this request linked to an existing or new dashboard/data source?'
                         }
                     },
-                    {
-                        type: 'input',
-                        block_id: 'other_description_input',
-                        optional: true,
-                        element: {
-                            type: 'plain_text_input',
-                            multiline: true,
-                            action_id: 'other_description',
-                            placeholder: {
-                                type: 'plain_text',
-                                text: 'Please explain what this request is for.'
-                            }
-                        },
-                        label: {
-                            type: 'plain_text',
-                            text: 'If it is other (Please explain)'
-                        }
-                    }
                 ],
                 submit: {
                     type: 'plain_text',
@@ -482,13 +532,311 @@ app.command('/help', async ({ command, ack, client, say }) => {
     }
 });
 
+
+app.action('help_button', async ({ body, ack, client }) => {
+    await ack();  // Acknowledge the button click
+
+    try {
+        const userId = body.user.id;
+
+        // Inform the user to fill out the form
+        await client.chat.postMessage({
+            channel: userId,  // Send message to the user directly
+            text: `Hi <@${userId}>! Please fill out the form below to submit your request.`
+        });
+
+        // Open the modal with the form
+        await client.views.open({
+            trigger_id: body.trigger_id,  // Trigger for opening the modal
+            view: {
+                type: 'modal',
+                callback_id: 'data_platform_request_form',
+                title: {
+                    type: 'plain_text',
+                    text: 'Data Platform Request'
+                },
+                blocks: [
+                    {
+                        type: 'input',
+                        block_id: 'name_input',
+                        element: {
+                            type: 'plain_text_input',
+                            action_id: 'name'
+                        },
+                        label: {
+                            type: 'plain_text',
+                            text: 'Name'
+                        }
+                    },
+                    {
+                        type: 'input',
+                        block_id: 'team_input',
+                        optional: false,
+                        element: {
+                            type: 'static_select', // Changed to static_select for single choice
+                            action_id: 'team_type',
+                            options: [
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Marketing'
+                                    },
+                                    value: 'marketing'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Programmes'
+                                    },
+                                    value: 'programmes'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'E & I'
+                                    },
+                                    value: 'e_and_i'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'MarComms'
+                                    },
+                                    value: 'mar_comms'
+                                }
+                            ]
+                        },
+                        label: {
+                            type: 'plain_text',
+                            text: 'Which department do you belong to?'
+                        }
+                    },                    
+                    {
+                        type: 'input',
+                        block_id: 'request_type_input',
+                        element: {
+                            type: 'static_select',
+                            action_id: 'request_type',
+                            options: [
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Dashboard (One-Off)'
+                                    },
+                                    value: 'one_off'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Data Source (Required Regularly)'
+                                    },
+                                    value: 'required_regularly'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Other'
+                                    },
+                                    value: 'existing_info'
+                                }
+                            ]
+                        },
+                        label: {
+                            type: 'plain_text',
+                            text: 'Request Type'
+                        }
+                    },
+                    {
+                        type: 'input',
+                        block_id: 'geo_specific_input',
+                        optional: false,
+                        element: {
+                            type: 'static_select', // Changed to static_select for single choice
+                            action_id: 'geo_specific',
+                            options: [
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'India'
+                                    },
+                                    value: 'india'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'South Africa'
+                                    },
+                                    value: 'south_africa'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Kenya'
+                                    },
+                                    value: 'kenya'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Tanzania'
+                                    },
+                                    value: 'tanzania'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Nigeria'
+                                    },
+                                    value: 'nigeria'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Ethiopia'
+                                    },
+                                    value: 'ethiopia'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Global'
+                                    },
+                                    value: 'global'
+                                }
+                            ]
+                        },
+                        label: {
+                            type: 'plain_text',
+                            text: 'Is this geo-specific?'
+                        }
+                    },
+                    {
+                        type: 'input',
+                        block_id: 'priority_input',
+                        element: {
+                            type: 'static_select',
+                            action_id: 'priority',
+                            options: [
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'High'
+                                    },
+                                    value: 'high'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Medium'
+                                    },
+                                    value: 'medium'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Low'
+                                    },
+                                    value: 'low'
+                                }
+                            ]
+                        },
+                        label: {
+                            type: 'plain_text',
+                            text: 'Priority Level'
+                        }
+                    },
+                    {
+                        type: 'input',
+                        block_id: 'dashboard_or_datasource_input',
+                        element: {
+                            type: 'static_select',
+                            action_id: 'dashboard_or_datasource',
+                            options: [
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Linked to existing dashboard'
+                                    },
+                                    value: 'existing_dashboard'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'New dashboard'
+                                    },
+                                    value: 'new_dashboard'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'Linked to existing data source'
+                                    },
+                                    value: 'existing_datasource'
+                                },
+                                {
+                                    text: {
+                                        type: 'plain_text',
+                                        text: 'New data source'
+                                    },
+                                    value: 'new_datasource'
+                                }
+                            ]
+                        },
+                        label: {
+                            type: 'plain_text',
+                            text: 'Is this request linked to an existing or new dashboard/data source?'
+                        }
+                    },
+                    {
+                        type: 'input',
+                        block_id: 'description_input',
+                        element: {
+                            type: 'plain_text_input',
+                            multiline: true,
+                            action_id: 'description'
+                        },
+                        label: {
+                            type: 'plain_text',
+                            text: 'Description (Required)'
+                        }
+                    },
+                    {
+                        type: 'input',
+                        block_id: 'completion_date_input',
+                        element: {
+                            type: 'datepicker',
+                            action_id: 'completion_date',
+                            placeholder: {
+                                type: 'plain_text',
+                                text: 'Select a date'
+                            }
+                        },
+                        label: {
+                            type: 'plain_text',
+                            text: 'Desired Completion Date'
+                        }
+                    },
+                ],
+                submit: {
+                    type: 'plain_text',
+                    text: 'Submit'
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error opening modal:', error.message, error.stack);
+    }
+});
+
+
 // Handle form submission
 app.view('data_platform_request_form', async ({ ack, body, view, client }) => {
     await ack();
 
     const user = body.user.id;
     const name = view.state.values.name_input.name.value;
-    const role = view.state.values.role_input.role.value;
+    const departmentName = view.state.values.department_name_input.role.value;
     const requestType = view.state.values.request_type_input.request_type.selected_option.value;
     const geoSpecific = view.state.values.geo_specific_input.geo_specific.selected_option.value; // Updated to single choice
     const description = view.state.values.description_input.description.value;
@@ -509,7 +857,7 @@ app.view('data_platform_request_form', async ({ ack, body, view, client }) => {
 
     console.log(`Request submitted by ${user}:`, {
         name,
-        role,
+        departmentName,
         requestType,
         geoSpecific,
         description,
@@ -520,7 +868,7 @@ app.view('data_platform_request_form', async ({ ack, body, view, client }) => {
     try {
         const plainText = `Your request details are as follows:
             Name: ${name}
-        Role: ${role}
+        Department Name: ${departmentName}
     Request Type: ${requestType}
     Request Details: ${requestDetails}
         Geo - Specific: ${geoSpecific}
