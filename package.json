@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "My first slackbot",
   "main": "index.js",
+  
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js"
@@ -11,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@slack/bolt": "^4.1.1",
-    "@slack/client": "^4.12.0"
+    "@slack/client": "^5.0.2"
   },
   "devDependencies": {
     "dotenv": "^16.4.5",
