@@ -836,7 +836,7 @@ app.view('data_platform_request_form', async ({ ack, body, view, client }) => {
 
     const user = body.user.id;
     const name = view.state.values.name_input.name.value;
-    const departmentName = view.state.values.department_name_input.role.value;
+    const departmentName = view.state.values.department_name_input.value;
     const requestType = view.state.values.request_type_input.request_type.selected_option.value;
     const geoSpecific = view.state.values.geo_specific_input.geo_specific.selected_option.value; // Updated to single choice
     const description = view.state.values.description_input.description.value;
@@ -886,7 +886,7 @@ app.view('data_platform_request_form', async ({ ack, body, view, client }) => {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: `Your request details are as follows: \n\n*Name: * ${name}\n * Role:* ${role}\n * Request Type:* ${requestType}\n${requestDetails}\n * Geo - Specific:* ${geoSpecific}\n * Description:* ${description}\n * Priority:* ${priority}\n * Desired Completion Date:* ${completionDate}\n\n_Thank you, < @${user} >, someone from the Data team will be in touch shortly to follow up on your request._`
+                        text: `Your request details are as follows: \n\n*Name:* ${name}\n*Department:* ${departmentName}\n*Request Type:* ${requestType}\n${requestDetails}\n*Geo-Specific:* ${geoSpecific}\n*Description:* ${description}\n*Priority:* ${priority}\n*Desired Completion Date:* ${completionDate}\n\n_Thank you, <@${user}>, someone from the Data team will be in touch shortly to follow up on your request._`
                     }
                 }
             ]
