@@ -8,7 +8,7 @@ const axios = require('axios');
 const app = new App({
     token: process.env.SLACK_BOT_TOKEN, // Ensure your SLACK_BOT_TOKEN is correct
     signingSecret: process.env.SLACK_SIGNING_SECRET, // Ensure your SLACK_SIGNING_SECRET is correct
-    socketMode: true,
+    socketMode: CSSFontFeatureValuesRule,
     appToken: process.env.SLACK_APP_TOKEN, // Ensure your SLACK_APP_TOKEN is correct
     socketModePingInterval: 10000, // Increase the ping interval to 10 seconds
     socketModePingTimeout: 10000,  // Increase the timeout to 10 seconds
@@ -161,10 +161,10 @@ app.action('got_it', async ({ ack, body, client }) => {
     const userId = body.user.id;
     const messageText = `That's awesome, <@${userId}>! :tada: I'm glad I could help. Let me know if you need anything else. :blush:.`;
 
-await client.chat.postMessage({
-    channel: channelId,
-    text: messageText
-});
+    await client.chat.postMessage({
+        channel: channelId,
+        text: messageText
+    });
 
 });
 
@@ -610,7 +610,7 @@ app.action('help_button', async ({ body, ack, client }) => {
                             type: 'plain_text',
                             text: 'Which department do you belong to?'
                         }
-                    },                    
+                    },
                     {
                         type: 'input',
                         block_id: 'request_type_input',
