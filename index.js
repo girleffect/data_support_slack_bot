@@ -8,7 +8,7 @@ const axios = require('axios');
 const app = new App({
     token: process.env.SLACK_BOT_TOKEN, // Ensure your SLACK_BOT_TOKEN is correct
     signingSecret: process.env.SLACK_SIGNING_SECRET, // Ensure your SLACK_SIGNING_SECRET is correct
-    socketMode: CSSFontFeatureValuesRule,
+    socketMode: true,
     appToken: process.env.SLACK_APP_TOKEN, // Ensure your SLACK_APP_TOKEN is correct
     socketModePingInterval: 10000, // Increase the ping interval to 10 seconds
     socketModePingTimeout: 10000,  // Increase the timeout to 10 seconds
