@@ -206,7 +206,7 @@ app.command('/help', async ({ command, ack, say }) => {
     await ack();
 
     try {
-        const googleSheetFormURL = 'https://docs.google.com/forms/d/YOUR_FORM_ID/viewform'; // Replace with your actual form link
+        const googleSheetFormURL = 'https://docs.google.com/spreadsheets/d/1lxyqzwE6HoJlDt-LH8qTt0GcaShnbDOSFyFGJcz8lGM/edit?usp=sharing'; // Replace with your actual form link
 
         await say(`Hi <@${command.user_id}>! Please fill out the request form here: <${googleSheetFormURL}|Click here to submit your request>.`);
     } catch (error) {
