@@ -4,6 +4,15 @@ const { App } = require('@slack/bolt');
 require('dotenv').config();
 const axios = require('axios');
 
+// Validate required environment variables
+const requiredEnvVars = ['SLACK_BOT_TOKEN', 'SLACK_SIGNING_SECRET', 'SLACK_APP_TOKEN'];
+for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+        console.error(`❌ Missing required environment variable: ${envVar}`);
+        process.exit(1);
+    }
+}
+
 // Initialize the app with your bot token and signing secret
 const app = new App({
     token: process.env.SLACK_BOT_TOKEN, // Ensure your SLACK_BOT_TOKEN is correct
@@ -69,45 +78,6 @@ app.command('/hi', async ({ command, ack, say }) => {
         });
 });
 
-// Action handler for "Find a Dashboard"
-app.action('find_dashboard', async ({ ack, body, client }) => {
-    await ack();
-
-    const userId = body.user.id;
-    const channelId = body.channel.id; // Get the actual channel ID
-
-    // Define your dashboards message here
-    const dashboardsMessage = "Here is the dashboard message"; // Replace with the actual message content
-
-    await client.chat.postMessage({
-        channel: channelId, // Use the actual channelId variable here
-        blocks: [
-            {
-                type: "actions",
-                elements: [
-                    {
-                        type: "button",
-                        text: {
-                            type: "plain_text",
-                            text: "Found what I was looking for!"
-                        },
-                        value: "got_it",
-                        action_id: "got_it"
-                    },
-                    {
-                        type: "button",
-                        text: {
-                            type: "plain_text",
-                            text: "No, I still need help."
-                        },
-                        value: "need_help_dashboard",
-                        action_id: "need_help_dashboard"
-                    }
-                ]
-            }
-        ]
-    });
-});
 
 // Action handler for "No, I need help" after "Find a Dashboard"
 app.action('need_help_dashboard', async ({ ack, body, client }) => {
@@ -232,303 +202,15 @@ async function dashboardsMessage(userId, say) {
 
 
 // Slash command for '/help'
-app.command('/help', async ({ command, ack, client, say }) => {
+app.command('/help', async ({ command, ack, say }) => {
     await ack();
 
     try {
-        // Inform the user to fill out the form
-        await say(`Hi <@${command.user_id}>! Please fill out the form below to submit your request.`);
+        const googleSheetFormURL = 'https://docs.google.com/forms/d/YOUR_FORM_ID/viewform'; // Replace with your actual form link
 
-        // Open the modal
-        await client.views.open({
-            trigger_id: command.trigger_id,
-            view: {
-                type: 'modal',
-                callback_id: 'data_platform_request_form', // Ensure this matches the handler
-                title: {
-                    type: 'plain_text',
-                    text: 'Data Platform Request'
-                },
-                blocks: [
-                    {
-                        type: 'input',
-                        block_id: 'name_input',
-                        element: {
-                            type: 'plain_text_input',
-                            action_id: 'name'
-                        },
-                        label: {
-                            type: 'plain_text',
-                            text: 'Name'
-                        }
-                    },
-                    {
-                        type: 'input',
-                        block_id: 'department_input',
-                        element: {
-                            type: 'plain_text_input',
-                            action_id: 'department_name'
-                        },
-                        label: {
-                            type: 'plain_text',
-                            text: 'Department Name'
-                        }
-                    },
-                    {
-                        type: 'input',
-                        block_id: 'team_input',
-                        element: {
-                            type: 'static_select', // Changed to static_select for single choice
-                            action_id: 'team_type',
-                            options: [
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Marketing'
-                                    },
-                                    value: 'marketing'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Programmes'
-                                    },
-                                    value: 'programmes'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'E & I'
-                                    },
-                                    value: 'e_and_i'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'MarComms'
-                                    },
-                                    value: 'mar_comms'
-                                }
-                            ]
-                        },
-                        label: {
-                            type: 'plain_text',
-                            text: 'Which department do you belong to?'
-                        }
-                    },
-                    {
-                        type: 'input',
-                        block_id: 'request_type_input',
-                        element: {
-                            type: 'static_select',
-                            action_id: 'request_type',
-                            options: [
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Dashboard (One-Off)'
-                                    },
-                                    value: 'one_off'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Data Source (Required Regularly)'
-                                    },
-                                    value: 'required_regularly'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Other'
-                                    },
-                                    value: 'existing_info'
-                                }
-                            ]
-                        },
-                        label: {
-                            type: 'plain_text',
-                            text: 'Request Type'
-                        }
-                    },
-                    {
-                        type: 'input',
-                        block_id: 'geo_specific_input',
-                        element: {
-                            type: 'static_select', // Changed to static_select for single choice
-                            action_id: 'geo_specific',
-                            options: [
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'India'
-                                    },
-                                    value: 'india'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'South Africa'
-                                    },
-                                    value: 'south_africa'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Kenya'
-                                    },
-                                    value: 'kenya'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Tanzania'
-                                    },
-                                    value: 'tanzania'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Nigeria'
-                                    },
-                                    value: 'nigeria'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Ethiopia'
-                                    },
-                                    value: 'ethiopia'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Global'
-                                    },
-                                    value: 'global'
-                                }
-                            ]
-                        },
-                        label: {
-                            type: 'plain_text',
-                            text: 'Is this geo-specific?'
-                        }
-                    },
-                    {
-                        type: 'input',
-                        block_id: 'description_input',
-                        element: {
-                            type: 'plain_text_input',
-                            multiline: true,
-                            action_id: 'description'
-                        },
-                        label: {
-                            type: 'plain_text',
-                            text: 'Description (Required)'
-                        }
-                    },
-                    {
-                        type: 'input',
-                        block_id: 'priority_input',
-                        element: {
-                            type: 'static_select',
-                            action_id: 'priority',
-                            options: [
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'High'
-                                    },
-                                    value: 'high'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Medium'
-                                    },
-                                    value: 'medium'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Low'
-                                    },
-                                    value: 'low'
-                                }
-                            ]
-                        },
-                        label: {
-                            type: 'plain_text',
-                            text: 'Priority Level'
-                        }
-                    },
-                    {
-                        type: 'input',
-                        block_id: 'completion_date_input',
-                        element: {
-                            type: 'datepicker',
-                            action_id: 'completion_date',
-                            placeholder: {
-                                type: 'plain_text',
-                                text: 'Select a date'
-                            }
-                        },
-                        label: {
-                            type: 'plain_text',
-                            text: 'Desired Completion Date'
-                        }
-                    },
-                    {
-                        type: 'input',
-                        block_id: 'dashboard_or_datasource_input',
-                        element: {
-                            type: 'static_select',
-                            action_id: 'dashboard_or_datasource',
-                            options: [
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Linked to existing dashboard'
-                                    },
-                                    value: 'existing_dashboard'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'New dashboard'
-                                    },
-                                    value: 'new_dashboard'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'Linked to existing data source'
-                                    },
-                                    value: 'existing_datasource'
-                                },
-                                {
-                                    text: {
-                                        type: 'plain_text',
-                                        text: 'New data source'
-                                    },
-                                    value: 'new_datasource'
-                                }
-                            ]
-                        },
-                        label: {
-                            type: 'plain_text',
-                            text: 'Is this request linked to an existing or new dashboard/data source?'
-                        }
-                    },
-                ],
-                submit: {
-                    type: 'plain_text',
-                    text: 'Submit'
-                }
-            }
-        });
+        await say(`Hi <@${command.user_id}>! Please fill out the request form here: <${googleSheetFormURL}|Click here to submit your request>.`);
     } catch (error) {
-        console.error('Error opening modal:', error.message, error.stack);
+        console.error('Error sending form link:', error.message, error.stack);
     }
 });
 
@@ -606,10 +288,6 @@ app.action('help_button', async ({ body, ack, client }) => {
                                 }
                             ]
                         },
-                        label: {
-                            type: 'plain_text',
-                            text: 'Which department do you belong to?'
-                        }
                     },
                     {
                         type: 'input',
@@ -830,45 +508,66 @@ app.action('help_button', async ({ body, ack, client }) => {
 });
 
 
-// Handle form submission
+// Handle form submission with validation
 app.view('data_platform_request_form', async ({ ack, body, view, client }) => {
-    await ack();
-
-    const user = body.user.id;
-    const name = view.state.values.name_input.name.value;
-    const departmentName = view.state.values.department_name_input.value;
-    const requestType = view.state.values.request_type_input.request_type.selected_option.value;
-    const geoSpecific = view.state.values.geo_specific_input.geo_specific.selected_option.value; // Updated to single choice
-    const description = view.state.values.description_input.description.value;
-    const priority = view.state.values.priority_input.priority.selected_option.value;
-    const completionDate = view.state.values.completion_date_input.completion_date.selected_date;
-
-    // Get additional details for request type (linked to existing or new)
-    let requestDetails = '';
-    if (requestType === 'one_off') {
-        const linkedToExisting = view.state.values.dashboard_or_datasource_input.dashboard_or_datasource.selected_option.value;
-        requestDetails = `Request is linked to an existing dashboard: ${linkedToExisting}`;
-    } else if (requestType === 'required_regularly') {
-        const linkedToExisting = view.state.values.dashboard_or_datasource_input.dashboard_or_datasource.selected_option.value;
-        requestDetails = `Request is linked to an existing data source: ${linkedToExisting}`;
-    } else if (requestType === 'existing_info') {
-        requestDetails = `Additional explanation: ${view.state.values.other_description_input.other_description.value}`;
+    // Validate required fields
+    const errors = [];
+    if (!view.state.values.name_input?.name?.value) {
+        errors.push('Name is required');
+    }
+    if (!view.state.values.description_input?.description?.value) {
+        errors.push('Description is required');
     }
 
-    console.log(`Request submitted by ${user}:`, {
+    if (errors.length > 0) {
+        await ack({
+            response_action: 'errors',
+            errors: {
+                name_input: errors.includes('Name is required') ? 'Please enter your name' : undefined,
+                description_input: errors.includes('Description is required') ? 'Please provide a description' : undefined
+            }
+        });
+        return;
+    }
+
+    await ack();
+
+    console.log('VIEW STATE VALUES:', JSON.stringify(view.state.values, null, 2)); // Debugging
+
+    const user = body.user.id;
+    const name = view.state.values.name_input?.name?.value || 'N/A';
+    const teamType = view.state.values.team_input?.team_type?.selected_option?.value || 'N/A';
+    const requestType = view.state.values.request_type_input?.request_type?.selected_option?.value || 'N/A';
+    const geoSpecific = view.state.values.geo_specific_input?.geo_specific?.selected_option?.value || 'N/A';
+    const description = view.state.values.description_input?.description?.value || 'N/A';
+    const priority = view.state.values.priority_input?.priority?.selected_option?.value || 'N/A';
+    const completionDate = view.state.values.completion_date_input?.completion_date?.selected_date || 'N/A';
+
+    // Handling optional request details correctly
+    let requestDetails = '';
+    if (requestType === 'one_off' || requestType === 'required_regularly') {
+        const linkedToExisting = view.state.values.dashboard_or_datasource_input?.dashboard_or_datasource?.selected_option?.value || 'N/A';
+        requestDetails = `Request is linked to an existing dashboard/data source: ${linkedToExisting}`;
+    } else if (requestType === 'existing_info') {
+        requestDetails = `Additional explanation: ${view.state.values.other_description_input?.other_description?.value || 'N/A'}`;
+    }
+
+    // Debugging log to confirm values exist
+    console.log('Extracted Form Data:', {
         name,
-        departmentName,
+        teamType,
         requestType,
         geoSpecific,
         description,
         priority,
-        completionDate
+        completionDate,
+        requestDetails
     });
 
     try {
         const plainText = `Your request details are as follows:
             Name: ${name}
-        Department Name: ${departmentName}
+        Team: ${teamType}
     Request Type: ${requestType}
     Request Details: ${requestDetails}
         Geo - Specific: ${geoSpecific}
@@ -886,7 +585,7 @@ app.view('data_platform_request_form', async ({ ack, body, view, client }) => {
                     type: "section",
                     text: {
                         type: "mrkdwn",
-                        text: `Your request details are as follows: \n\n*Name:* ${name}\n*Department:* ${departmentName}\n*Request Type:* ${requestType}\n${requestDetails}\n*Geo-Specific:* ${geoSpecific}\n*Description:* ${description}\n*Priority:* ${priority}\n*Desired Completion Date:* ${completionDate}\n\n_Thank you, <@${user}>, someone from the Data team will be in touch shortly to follow up on your request._`
+                        text: `Your request details are as follows: \n\n*Name:* ${name}\n*Request Type:* ${requestType}\n${requestDetails}\n*Geo-Specific:* ${geoSpecific}\n*Description:* ${description}\n*Priority:* ${priority}\n*Desired Completion Date:* ${completionDate}\n\n_Thank you, <@${user}>, someone from the Data team will be in touch shortly to follow up on your request._`
                     }
                 }
             ]
@@ -899,9 +598,22 @@ app.view('data_platform_request_form', async ({ ack, body, view, client }) => {
 
 
 
+// Utility function for error handling
+function logError(error, context = '') {
+    console.error(`❌ Error${context ? ` in ${context}` : ''}:`, error.message || error);
+    if (error.stack) {
+        console.error('Stack trace:', error.stack);
+    }
+}
+
 // Start your app
 (async () => {
-    const port = process.env.PORT || 3000;  // Default to port 3000 if not set
-    await app.start(port);
-    console.log(`⚡️ Slack bot is running on port ${port}`);
+    try {
+        const port = process.env.PORT || 3000;
+        await app.start(port);
+        console.log(`⚡️ Slack bot is running on port ${port}`);
+    } catch (error) {
+        logError(error, 'app startup');
+        process.exit(1);
+    }
 })();

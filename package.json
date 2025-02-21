@@ -1,7 +1,7 @@
 {
-  "name": "helloworld",
+  "name": "data_dada",
   "version": "1.0.0",
-  "description": "My first slackbot",
+  "description": "GE Data Platform slackbot",
   "main": "index.js",
   
   "scripts": {
