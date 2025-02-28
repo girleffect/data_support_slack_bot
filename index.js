@@ -168,36 +168,20 @@ app.action('find_dashboard', async ({ ack, body, client }) => {
 // Helper function to fetch and send dashboards
 async function dashboardsMessage(userId, say) {
     try {
-        console.log("Fetching dashboard data...");
+        console.log("Sending Notion dashboard link...");
 
-        // Fetch data from the GitHub JSON file
-        const response = await axios.get('https://raw.githubusercontent.com/girleffect/data_dada/main/dashboard.json');
-
-        console.log('API Response:', JSON.stringify(response.data, null, 2)); // Log response for debugging
-
-        // Check if 'dashboards' exists in the response
-        if (!response.data || !response.data.dashboards) {
-            throw new Error('Dashboards not found in response');
-        }
-
-        const dashboards = response.data.dashboards;
-        const formattedTitles = dashboards
-            .map((d, i) => `${i + 1}.<${d.url}|${d.title}> ${d.description}`)
-            .join('\n');
-
-        // Send the formatted message
-        await say(`Here <@${userId}> is the list of currently available dashboards: \n${formattedTitles}`);
+        const notionLink = "https://www.notion.so/gedigitalteam/GE-Data-Portal-1360818435d5808c8b94e5ae808c5cf4?pvs=4";
+        
+        // Send the message with the Notion link
+        await say(`Here <@${userId}>, you can find the list of available dashboards on our Data Portal: <${notionLink}|GE Data Portal>.`);
     } catch (error) {
-        console.error('Error fetching dashboards:', error);
-
-        if (error.response) {
-            console.error('API Response Error:', error.response.data);
-        }
+        console.error('Error sending Notion link:', error);
 
         // Notify Slack user of the failure
-        await say('Sorry, I could not fetch the dashboards at the moment. Please try again later.');
+        await say('Sorry, I could not provide the dashboard link at the moment. Please try again later.');
     }
 }
+
 
 
 
